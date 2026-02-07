@@ -10,6 +10,7 @@ import 'package:shelf_router/shelf_router.dart';
 import '../models/vpn_control_api.dart';
 import 'secure_certificate_service.dart';
 import 'vpn_control_api_service.dart';
+import 'vpn_control_swagger.dart';
 
 /// Information about an available API route.
 class RouteInfo {
@@ -64,6 +65,12 @@ class VpnControlServer {
       method: 'GET',
       path: '/status',
       description: 'Get current VPN connection status',
+    ),
+    RouteInfo(
+      method: 'GET',
+      path: '/swagger',
+      description: 'Swagger UI API documentation',
+      requiresAuth: false,
     ),
   ];
   final VpnControlApiService _apiService;
@@ -202,6 +209,9 @@ class VpnControlServer {
     router.post('/disconnect', _handleDisconnect);
     router.get('/status', _handleStatus);
 
+    // Documentation
+    router.get('/swagger', _handleSwagger);
+
     // Catch-all for 404
     router.all('/<ignored|.*>', _handleNotFound);
 
@@ -272,6 +282,14 @@ class VpnControlServer {
         status: 500,
       );
     }
+  }
+
+  /// GET /swagger - Swagger UI documentation.
+  Response _handleSwagger(Request request) {
+    return Response.ok(
+      VpnControlSwagger.buildSwaggerHtml(),
+      headers: {'Content-Type': 'text/html; charset=utf-8'},
+    );
   }
 
   /// 404 handler.
@@ -358,7 +376,7 @@ class VpnControlServer {
       return (Request request) async {
         // Skip auth for health check endpoints
         final path = request.url.path;
-        if (path == '' || path == '/' || path == 'health') {
+        if (path == '' || path == '/' || path == 'health' || path == 'swagger') {
           return handler(request);
         }
 
