@@ -47,6 +47,7 @@ flutter build apk --release
 - Per-app VPN filtering
 - HTTP/3 (QUIC) blocking option
 - Certificate download from proxy server
+- Always-on VPN support (tunnel restored automatically after reboot)
 
 ## License
 
