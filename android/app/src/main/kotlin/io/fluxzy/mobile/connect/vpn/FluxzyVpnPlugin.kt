@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.VpnService
 import android.os.Build
 import android.os.Environment
+import android.provider.Settings
 import android.provider.MediaStore
 import android.util.Log
 import java.io.File
@@ -160,6 +161,7 @@ class FluxzyVpnPlugin : FlutterPlugin, ActivityAware, MethodChannel.MethodCallHa
             "installCertificate" -> handleInstallCertificate(call, result)
             "saveCertificateToDownloads" -> handleSaveCertificateToDownloads(call, result)
             "getInstalledApps" -> handleGetInstalledApps(call, result)
+            "openVpnSettings" -> handleOpenVpnSettings(result)
             else -> result.notImplemented()
         }
     }
@@ -219,6 +221,29 @@ class FluxzyVpnPlugin : FlutterPlugin, ActivityAware, MethodChannel.MethodCallHa
         context?.startService(intent)
         result.success(true)
         Log.d(TAG, "Disconnect request sent")
+    }
+
+    /**
+     * Opens the system VPN settings screen where the user can enable
+     * "Always-on VPN" for this app, which makes the system start the
+     * tunnel automatically after a reboot.
+     */
+    private fun handleOpenVpnSettings(result: MethodChannel.Result) {
+        val ctx = context
+        if (ctx == null) {
+            result.success(false)
+            return
+        }
+        try {
+            val intent = Intent(Settings.ACTION_VPN_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            ctx.startActivity(intent)
+            result.success(true)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to open VPN settings", e)
+            result.success(false)
+        }
     }
 
     private fun handlePrepareVpn(result: MethodChannel.Result) {

@@ -80,6 +80,17 @@ class FluxzyVpnService : VpnService() {
                 blockHttp3 = intent.getBooleanExtra(EXTRA_BLOCK_HTTP3, false)
 
                 if (!currentHost.isNullOrBlank() && currentPort > 0) {
+                    // Remember the parameters so Always-on VPN can restore the tunnel after a reboot
+                    VpnConfigStore(this).save(
+                        VpnConfigStore.VpnConfig(
+                            host = currentHost!!,
+                            port = currentPort,
+                            username = currentUsername,
+                            password = currentPassword,
+                            allowedApps = allowedApps,
+                            blockHttp3 = blockHttp3
+                        )
+                    )
                     connect()
                 } else {
                     Log.e(TAG, "Invalid connection parameters: host=$currentHost, port=$currentPort")
@@ -90,11 +101,37 @@ class FluxzyVpnService : VpnService() {
                 disconnect()
             }
             else -> {
-                Log.w(TAG, "Unknown action: ${intent?.action}")
+                // No explicit action: either the system started us (Always-on VPN after boot,
+                // action == SERVICE_INTERFACE) or START_STICKY restarted us with a null intent.
+                // Reconnect with the last known parameters, if any.
+                restoreFromSavedConfig(intent?.action)
             }
         }
 
         return START_STICKY
+    }
+
+    private fun restoreFromSavedConfig(action: String?) {
+        if (currentState == VpnState.CONNECTING || currentState == VpnState.CONNECTED) {
+            Log.d(TAG, "Ignoring system start (action=$action): already $currentState")
+            return
+        }
+
+        val saved = VpnConfigStore(this).load()
+        if (saved == null) {
+            Log.w(TAG, "System start (action=$action) but no saved configuration, stopping")
+            stopSelf()
+            return
+        }
+
+        Log.i(TAG, "System start (action=$action): restoring connection to ${saved.host}:${saved.port}")
+        currentHost = saved.host
+        currentPort = saved.port
+        currentUsername = saved.username
+        currentPassword = saved.password
+        allowedApps = saved.allowedApps
+        blockHttp3 = saved.blockHttp3
+        connect()
     }
 
     private fun connect() {

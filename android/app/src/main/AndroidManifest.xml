@@ -55,7 +55,7 @@
             </intent-filter>
             <meta-data
                 android:name="android.net.VpnService.SUPPORTS_ALWAYS_ON"
-                android:value="false" />
+                android:value="true" />
             <!-- Special-use foreground service subtype (VPN tunnel), declared for Play policy review -->
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"

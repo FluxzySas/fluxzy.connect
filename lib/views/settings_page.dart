@@ -304,6 +304,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   _buildWebServerSection(context, state, viewModel),
                   const SizedBox(height: 24),
                   _buildSaveButton(context, state, viewModel),
+                  const SizedBox(height: 24),
+                  _buildAlwaysOnSection(context),
                 ],
               ),
             ),
@@ -813,6 +815,86 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     if (confirmed == true) {
       await viewModel.regenerateToken();
     }
+  }
+
+  Widget _buildAlwaysOnSection(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.restart_alt,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Start after reboot',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Android can restore the VPN tunnel automatically after a reboot '
+              'using its built-in Always-on VPN feature. Connect once, then enable '
+              'Always-on VPN for Fluxzy Connect in the system VPN settings. '
+              'The last connection parameters are reused.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Only the tunnel is restored. The management web server starts '
+              'when the app is opened.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () async {
+                final opened =
+                    await ref.read(vpnServiceProvider).openVpnSettings();
+                if (!opened && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Could not open VPN settings. Open Settings > Network > VPN manually.',
+                      ),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.settings_outlined),
+              label: const Text('Open system VPN settings'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildSaveButton(

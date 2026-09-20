@@ -128,6 +128,9 @@ class MockVpnService implements VpnService {
     ];
   }
 
+  @override
+  Future<bool> openVpnSettings() async => false;
+
   void dispose() {
     _stateController.close();
   }

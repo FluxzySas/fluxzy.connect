@@ -176,6 +176,16 @@ class AndroidVpnService implements VpnService {
     }
   }
 
+  @override
+  Future<bool> openVpnSettings() async {
+    try {
+      final result = await _methodChannel.invokeMethod<bool>('openVpnSettings');
+      return result ?? false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
   void dispose() {
     _stateSubscription?.cancel();
     _stateController.close();
